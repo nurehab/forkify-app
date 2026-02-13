@@ -1,23 +1,23 @@
-class searchView {
-  #parentEl = document.querySelector('.search');
+class SearchView {
+  _parentElement = document.querySelector('.search');
   getQuery() {
     // get search query
-    const query = this.#parentEl.querySelector('.search__field').value;
+    const query = this._parentElement.querySelector('.search__field').value;
     // clear input field
-    this.#clearInput();
+    this._clearInput();
     // el note de?search=fElkorasea
     return query;
   }
 
-  #clearInput() {
-    return (this.#parentEl.querySelector('.search__field').value = '');
+  _clearInput() {
+    return (this._parentElement.querySelector('.search__field').value = '');
   }
   addHandlerSearch(handler) {
-    this.#parentEl.addEventListener('submit', function (e) {
+    this._parentElement.addEventListener('submit', function (e) {
       e.preventDefault();
       handler();
     });
   }
 }
 
-export default new searchView();
+export default new SearchView();
