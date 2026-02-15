@@ -7,9 +7,9 @@ import paginationView from './views/paginationView.js';
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
-if (module.hot) {
-  module.hot.accept();
-}
+// if (module.hot) {
+//   module.hot.accept();
+// }
 
 const controlRecipes = async function () {
   try {
@@ -21,9 +21,8 @@ const controlRecipes = async function () {
     // 1) loading recipe
     await model.loadRecipe(id);
 
-    recipeView.render(model.state.recipe);
-
     // 2) rendering recipe
+    recipeView.render(model.state.recipe);
   } catch (err) {
     // alert(err);
     // console.error(err);
@@ -57,8 +56,19 @@ const controlPagination = function (goToPage) {
   paginationView.render(model.state.search);
 };
 
+// update servings:
+const controlServings = function (n) {
+  // update the number of recipe servings (in state y3ni gowa el model)
+  model.updateServings(n);
+  // update the recipe view (view bardo)
+  // recipeView.render(model.state.recipe);
+  // update text + attributes HTML without re render the entire view
+  recipeView.update(model.state.recipe);
+};
+
 const init = function () {
   recipeView.addHandlerRender(controlRecipes);
+  recipeView.addHandlerUpdateServings(controlServings);
   searchView.addHandlerSearch(controlSearchRecipe);
   paginationView.addHandlerClick(controlPagination);
 };

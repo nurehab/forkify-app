@@ -10,9 +10,9 @@ class PaginationView extends View {
       const btn = e.target.closest('.btn--inline');
       if (!btn) return;
       // Data Attributes :
-      const goToPage = +btn.dataset.goto;
+      const { goToPage } = btn.dataset;
       // generate THE PUBLISHER :
-      handler(goToPage);
+      handler(+goToPage);
     });
   }
   _generateMarkup() {
@@ -23,7 +23,7 @@ class PaginationView extends View {
     // page 1, and there are other pages
     if (currentPage === 1 && numsOfPages > 1) {
       return `
-        <button data-goto="${currentPage + 1}" class="btn--inline pagination__btn--next">
+        <button data-go-to-page="${currentPage + 1}" class="btn--inline pagination__btn--next">
           <span>Page ${currentPage + 1}</span>
           <svg class="search__icon">
             <use href="${icons}#icon-arrow-right"></use>
@@ -34,7 +34,7 @@ class PaginationView extends View {
     // last page
     if (currentPage === numsOfPages && numsOfPages > 1) {
       return `
-        <button data-goto="${currentPage - 1}" class="btn--inline pagination__btn--prev">
+        <button data-go-to-page="${currentPage - 1}" class="btn--inline pagination__btn--prev">
           <svg class="search__icon">
             <use href="${icons}#icon-arrow-left"></use>
           </svg>
@@ -45,13 +45,13 @@ class PaginationView extends View {
     //other page
     if (currentPage < numsOfPages) {
       return `
-        <button data-goto="${currentPage - 1}" class="btn--inline pagination__btn--prev">
+        <button data-go-to-page="${currentPage - 1}" class="btn--inline pagination__btn--prev">
           <svg class="search__icon">
             <use href="${icons}#icon-arrow-left"></use>
           </svg>
           <span>Page ${currentPage - 1}</span>
         </button>
-        <button data-goto="${currentPage + 1}" class="btn--inline pagination__btn--next">
+        <button data-go-to-page="${currentPage + 1}" class="btn--inline pagination__btn--next">
           <span>Page ${currentPage + 1}</span>
           <svg class="search__icon">
             <use href="${icons}#icon-arrow-right"></use>

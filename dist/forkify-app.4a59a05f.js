@@ -727,7 +727,9 @@ var _resultsViewJsDefault = parcelHelpers.interopDefault(_resultsViewJs);
 var _paginationViewJs = require("./views/paginationView.js");
 var _paginationViewJsDefault = parcelHelpers.interopDefault(_paginationViewJs);
 var _runtime = require("regenerator-runtime/runtime");
-if (module.hot) module.hot.accept();
+// if (module.hot) {
+//   module.hot.accept();
+// }
 const controlRecipes = async function() {
     try {
         const id = window.location.hash.slice(1);
@@ -735,8 +737,8 @@ const controlRecipes = async function() {
         (0, _recipeViewJsDefault.default).renderSpinner();
         // 1) loading recipe
         await _modelJs.loadRecipe(id);
+        // 2) rendering recipe
         (0, _recipeViewJsDefault.default).render(_modelJs.state.recipe);
-    // 2) rendering recipe
     } catch (err) {
         // alert(err);
         // console.error(err);
@@ -768,8 +770,18 @@ const controlPagination = function(goToPage) {
     // 2- render NEW pagination buttons
     (0, _paginationViewJsDefault.default).render(_modelJs.state.search);
 };
+// update servings:
+const controlServings = function(n) {
+    // update the number of recipe servings (in state y3ni gowa el model)
+    _modelJs.updateServings(n);
+    // update the recipe view (view bardo)
+    // recipeView.render(model.state.recipe);
+    // update text + attributes HTML without re render the entire view
+    (0, _recipeViewJsDefault.default).update(_modelJs.state.recipe);
+};
 const init = function() {
     (0, _recipeViewJsDefault.default).addHandlerRender(controlRecipes);
+    (0, _recipeViewJsDefault.default).addHandlerUpdateServings(controlServings);
     (0, _searchViewJsDefault.default).addHandlerSearch(controlSearchRecipe);
     (0, _paginationViewJsDefault.default).addHandlerClick(controlPagination);
 };
@@ -2035,6 +2047,7 @@ parcelHelpers.export(exports, "state", ()=>state);
 parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
 parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
 parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
+parcelHelpers.export(exports, "updateServings", ()=>updateServings);
 var _configJs = require("./config.js");
 var _helperJs = require("./helper.js");
 const state = {
@@ -2092,6 +2105,15 @@ const getSearchResultsPage = function(page = state.search.page) {
     const start = (page - 1) * state.search.resultsPerPage;
     const end = page * state.search.resultsPerPage;
     return state.search.results.slice(start, end);
+};
+const updateServings = function(newServings) {
+    state.recipe.ingredients.forEach((ing)=>{
+        let newQt = ing.quantity;
+        newQt = newQt * newServings / state.recipe.servings;
+        ing.quantity = newQt;
+    // newQt = (oldQt * newServings) / oldServings // 2 * 8 / 4 = 4
+    });
+    state.recipe.servings = newServings;
 };
 
 },{"./config.js":"2hPh4","./helper.js":"b1fwP","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"2hPh4":[function(require,module,exports,__globalThis) {
@@ -2180,6 +2202,14 @@ class RecipeView extends (0, _viewJsDefault.default) {
             'load'
         ].forEach((ev)=>window.addEventListener(ev, handler));
     }
+    addHandlerUpdateServings(handler) {
+        this._parentElement.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn--update-servings');
+            if (!btn) return;
+            const { updateTo } = btn.dataset;
+            if (+updateTo >= 1) handler(+updateTo);
+        });
+    }
     _generateMarkup() {
         return `
         <figure class="recipe__fig">
@@ -2205,12 +2235,12 @@ class RecipeView extends (0, _viewJsDefault.default) {
             <span class="recipe__info-text">servings</span>
 
             <div class="recipe__info-buttons">
-              <button class="btn--tiny btn--increase-servings">
+              <button class="btn--tiny btn--update-servings" data-update-to="${this._data.servings - 1}">
                 <svg>
                   <use href="${0, _iconsSvgDefault.default}#icon-minus-circle"></use>
                 </svg>
               </button>
-              <button class="btn--tiny btn--increase-servings">
+              <button class="btn--tiny btn--update-servings"data-update-to="${this._data.servings + 1}">
                 <svg>
                   <use href="${0, _iconsSvgDefault.default}#icon-plus-circle"></use>
                 </svg>
@@ -2680,6 +2710,18 @@ class View {
     }
     _clear() {
         this._parentElement.innerHTML = '';
+    }
+    update(data) {
+        if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
+        this._data = data;
+        const newMarkup = this._generateMarkup();
+        const newDom = document.createRange().createContextualFragment(newMarkup);
+        const newElements = Array.from(newDom.querySelectorAll('*'));
+        const curElements = Array.from(this._parentElement.querySelectorAll('*'));
+        newElements.forEach((newEl, i)=>{
+            const curEl = curElements[i];
+            console.log(curEl, newEl.isEqualNode(curEl));
+        });
     }
     // Render Spinner
     renderSpinner() {
@@ -3384,9 +3426,9 @@ class PaginationView extends (0, _viewJsDefault.default) {
             const btn = e.target.closest('.btn--inline');
             if (!btn) return;
             // Data Attributes :
-            const goToPage = +btn.dataset.goto;
+            const { goToPage } = btn.dataset;
             // generate THE PUBLISHER :
-            handler(goToPage);
+            handler(+goToPage);
         });
     }
     _generateMarkup() {
@@ -3394,7 +3436,7 @@ class PaginationView extends (0, _viewJsDefault.default) {
         const numsOfPages = Math.ceil(this._data.results.length / this._data.resultsPerPage);
         // page 1, and there are other pages
         if (currentPage === 1 && numsOfPages > 1) return `
-        <button data-goto="${currentPage + 1}" class="btn--inline pagination__btn--next">
+        <button data-go-to-page="${currentPage + 1}" class="btn--inline pagination__btn--next">
           <span>Page ${currentPage + 1}</span>
           <svg class="search__icon">
             <use href="${0, _iconsSvgDefault.default}#icon-arrow-right"></use>
@@ -3403,7 +3445,7 @@ class PaginationView extends (0, _viewJsDefault.default) {
       `;
         // last page
         if (currentPage === numsOfPages && numsOfPages > 1) return `
-        <button data-goto="${currentPage - 1}" class="btn--inline pagination__btn--prev">
+        <button data-go-to-page="${currentPage - 1}" class="btn--inline pagination__btn--prev">
           <svg class="search__icon">
             <use href="${0, _iconsSvgDefault.default}#icon-arrow-left"></use>
           </svg>
@@ -3412,13 +3454,13 @@ class PaginationView extends (0, _viewJsDefault.default) {
       `;
         //other page
         if (currentPage < numsOfPages) return `
-        <button data-goto="${currentPage - 1}" class="btn--inline pagination__btn--prev">
+        <button data-go-to-page="${currentPage - 1}" class="btn--inline pagination__btn--prev">
           <svg class="search__icon">
             <use href="${0, _iconsSvgDefault.default}#icon-arrow-left"></use>
           </svg>
           <span>Page ${currentPage - 1}</span>
         </button>
-        <button data-goto="${currentPage + 1}" class="btn--inline pagination__btn--next">
+        <button data-go-to-page="${currentPage + 1}" class="btn--inline pagination__btn--next">
           <span>Page ${currentPage + 1}</span>
           <svg class="search__icon">
             <use href="${0, _iconsSvgDefault.default}#icon-arrow-right"></use>
