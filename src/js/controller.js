@@ -3,6 +3,7 @@ import recipeView from './views/recipeView.js';
 import searchView from './views/searchView.js';
 import resultsView from './views/resultsView.js';
 import paginationView from './views/paginationView.js';
+import bookmarksView from './views/bookmarksView.js';
 
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
@@ -11,6 +12,8 @@ import 'regenerator-runtime/runtime';
 //   module.hot.accept();
 // }
 
+// Publisher - Subscriber pattern :
+// Subscriber :
 const controlRecipes = async function () {
   try {
     const id = window.location.hash.slice(1);
@@ -19,10 +22,11 @@ const controlRecipes = async function () {
     recipeView.renderSpinner();
     // 0) Update results view to MARKHILIGHT selected search result ;)
     resultsView.update(model.getSearchResultsPage());
-    // 1) loading recipe
+    // 1) Update the bookmarks view
+    bookmarksView.update(model.state.bookmarks);
+    // 2) loading recipe
     await model.loadRecipe(id);
-
-    // 2) rendering recipe
+    // 3) rendering recipe
     recipeView.render(model.state.recipe);
   } catch (err) {
     // alert(err);
@@ -31,6 +35,8 @@ const controlRecipes = async function () {
   }
 };
 
+// Publisher - Subscriber pattern :
+// Subscriber :
 const controlSearchRecipe = async function () {
   try {
     resultsView.renderSpinner();
@@ -57,6 +63,8 @@ const controlPagination = function (goToPage) {
   paginationView.render(model.state.search);
 };
 
+// Publisher - Subscriber pattern :
+// Subscriber :
 // update servings:
 const controlServings = function (n) {
   // update the number of recipe servings (in state y3ni gowa el model)
@@ -67,12 +75,31 @@ const controlServings = function (n) {
   recipeView.update(model.state.recipe);
 };
 
+// Publisher - Subscriber pattern :
+// Subscriber :
+const controlAddBookmark = function () {
+  // 1- Add || Remove -- Bookmark
+  if (!model.state.recipe.bookmarked) model.addBookmark(model.state.recipe);
+  else model.removeBookmark(model.state.recipe.id);
+  // 2- Update recipe view
+  recipeView.update(model.state.recipe);
+
+  // 3- Render bookmarks
+  bookmarksView.render(model.state.bookmarks);
+};
+
+// Publisher - Subscriber pattern :
+// Subscriber :
+const controlBookmark = function () {
+  bookmarksView.render(model.state.bookmarks);
+};
+
 const init = function () {
   recipeView.addHandlerRender(controlRecipes);
   recipeView.addHandlerUpdateServings(controlServings);
+  recipeView.addHandlerAddBookmark(controlAddBookmark);
   searchView.addHandlerSearch(controlSearchRecipe);
   paginationView.addHandlerClick(controlPagination);
+  bookmarksView.addHandlerBookmark(controlBookmark);
 };
 init();
-// window.addEventListener('hashchange', showRecipe);
-// window.addEventListener('load', showRecipe);

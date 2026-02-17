@@ -8,6 +8,7 @@ export const state = {
     resultsPerPage: RES_PER_PAGE,
     page: 1,
   },
+  bookmarks: [],
 };
 export const loadRecipe = async function (id) {
   try {
@@ -28,6 +29,10 @@ export const loadRecipe = async function (id) {
       cookingTime: recipe.cooking_time,
       ingredients: recipe.ingredients,
     };
+
+    if (state.bookmarks.some(bookmark => bookmark.id === id))
+      state.recipe.bookmarked = true;
+    else state.recipe.bookmarked = false;
   } catch (err) {
     console.error(`${err} 💥💥💥💥💥`);
     throw err;
@@ -46,6 +51,7 @@ export const loadSearchResults = async function (query) {
         image: rec.image_url,
       };
     });
+    state.search.page = 1;
   } catch (err) {
     console.error(`${err} 💥💥💥💥💥`);
     throw err;
@@ -68,3 +74,38 @@ export const updateServings = function (newServings) {
   });
   state.recipe.servings = newServings;
 };
+
+// Storing the bookmarks in the local storage
+export const persistBookmarks = function () {
+  localStorage.setItem('bookmarks', JSON.stringify(state.bookmarks));
+};
+
+// Implement add bookmark :
+export const addBookmark = function (recipe) {
+  // Add bookmark
+  state.bookmarks.push(recipe);
+
+  // Mark current recipe as bookmarked
+  if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
+
+  persistBookmarks();
+};
+export const removeBookmark = function (id) {
+  // Delete bookemark
+  // i = index
+  const i = state.bookmarks.findIndex(b => b.id === id);
+  // splice (start, deleteCount) + bet3ml manipulate ll array
+  // array.splice(start, deleteCount, item1, item2, ...) -- item1 = dol adding items (y3ni bet3ml add bardo)
+  state.bookmarks.splice(i, 1);
+  // Mark current recipe as NOT bookmarked
+  if (id === state.recipe.id) state.recipe.bookmarked = false;
+
+  persistBookmarks();
+};
+
+const init = function () {
+  const storage = localStorage.getItem('bookmarks');
+  if (storage) state.bookmarks = JSON.parse(storage);
+};
+
+init();

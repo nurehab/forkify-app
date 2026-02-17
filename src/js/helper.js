@@ -17,3 +17,9 @@ export const getJson = async function (url) {
     throw err;
   }
 };
+
+export const eventDelegation = function (element) {
+  const btn = e.target.closest(element);
+  if (!btn) return;
+  handler();
+};
