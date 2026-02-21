@@ -3,6 +3,15 @@ import icons from 'url:../../img/icons.svg';
 // we are not gonna create any instance of this view - we will use it as a parent class of these other child views
 export default class View {
   _data;
+  /**
+   * Render the received object to the DOM
+   * @param {Object | Object[]} data The data to be rendered (e.g. recipe)
+   * @param {boolean} [render=true] If false, create markup string instead of rendering to the DOM
+   * @returns {undefined | string} A markup string is returned if render=false
+   * @this {Object} it points to the view object --> view instance
+   * @author Nour Ihab
+   * @todo Finish Implementation
+   */
   render(data, render = true) {
     if (!data || (Array.isArray(data) && data.length === 0))
       return this.renderError();

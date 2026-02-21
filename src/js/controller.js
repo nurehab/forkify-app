@@ -1,4 +1,5 @@
 import * as model from './model.js';
+import { CLOSE_WINDOW_SEC } from './config.js';
 import recipeView from './views/recipeView.js';
 import searchView from './views/searchView.js';
 import resultsView from './views/resultsView.js';
@@ -48,7 +49,7 @@ const controlSearchRecipe = async function () {
     await model.loadSearchResults(query);
     // 3- Render results
     // resultsView.render(model.state.search.results);
-    resultsView.render(model.getSearchResultsPage(2));
+    resultsView.render(model.getSearchResultsPage());
     // 4- render initial pagination buttons
     paginationView.render(model.state.search);
   } catch (err) {
@@ -95,8 +96,38 @@ const controlBookmark = function () {
   bookmarksView.render(model.state.bookmarks);
 };
 
-const controlAddRecipe = function (newRecipe) {
-  console.log(newRecipe);
+// Uplaod new Recipe :
+const controlAddRecipe = async function (newRecipe) {
+  try {
+    // Display loading spinner :
+    addRecipeView.renderSpinner();
+
+    // Upload the new Recipe :
+    await model.uploadRecipe(newRecipe);
+    console.log(model.state.recipe);
+
+    // Render Recipe :
+    recipeView.render(model.state.recipe);
+
+    // Success Message :
+    addRecipeView.renderMessage();
+
+    // Render Bookmark view :
+    bookmarksView.render(model.state.bookmarks);
+
+    // Change id in the URL :
+    window.history.pushState(null, '', `${model.state.recipe.id}`);
+    // Automaically going back to the last page :
+    // window.history.back()
+
+    // Closing Window :
+    setTimeout(() => {
+      addRecipeView.toggleWindow();
+    }, CLOSE_WINDOW_SEC * 1000);
+  } catch (err) {
+    console.error('💥', err);
+    addRecipeView.renderError(err.message);
+  }
 };
 
 const init = function () {
